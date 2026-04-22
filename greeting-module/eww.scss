@@ -1,0 +1,28 @@
+* {
+  all: unset;
+}
+
+/* Strip GTK's default window & background surface */
+window,
+window.background,
+.background {
+  background-color: rgba(0, 0, 0, 0);
+  background:       none;
+}
+
+.greeting-label {
+  font-family:   "Roboto Mono", monospace;
+  font-size:     96px;
+  font-weight:   bold;
+  color:         rgba(255, 255, 255, 1.0);
+  background:    transparent;
+  margin-bottom: 16px;
+}
+
+.quote-label {
+  font-family: "Roboto Mono", monospace;
+  font-size:   13px;
+  font-style:  italic;
+  color:       rgba(255, 255, 255, 0.55);
+  background:  transparent;
+}

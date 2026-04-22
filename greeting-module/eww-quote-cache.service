@@ -1,0 +1,12 @@
+[Unit]
+Description=Pre-warm Eww quote cache
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/Desktop/eww-widgets/greeting-module/quote.sh
+StandardOutput=null
+
+[Install]
+WantedBy=default.target

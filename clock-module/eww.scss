@@ -1,0 +1,88 @@
+// =============================================================================
+// COLOUR PALETTE
+// =============================================================================
+$color-primary:   #ff6b00; // Main hue   (fallback for hour, sec, day)
+$color-secondary: #a8ff3e; // Accent hue (fallback for min, month)
+$opacity-scale:   0.5;     // Global multiplier — 0.0 (invisible) → 2.0 (vivid)
+
+// Per-element overrides — set any to `null` to fall back to primary/secondary above
+// Each element also has its own base opacity which gets scaled by $opacity-scale
+$color-hour:    #ff6b00;   // Neon Orange     — null → uses $color-primary
+$color-min:     #00e5ff;   // Electric Cyan   — null → uses $color-secondary
+$color-sec:     #a8ff3e;   // Lime Green      — null → uses $color-primary
+$color-month:   #ff3cac;   // Hot Magenta     — null → uses $color-secondary
+$color-day:     #ffe600;   // Vivid Yellow    — null → uses $color-primary
+
+$opacity-hour:  0.40;      // per-element base opacity (before scale)
+$opacity-min:   0.25;
+$opacity-sec:   0.35;
+$opacity-month: 0.20;
+$opacity-day:   0.50;
+// =============================================================================
+
+* {
+  all: unset;
+}
+
+.debug-label {
+  font-family: "Roboto Mono", monospace;
+  font-size: 10px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin: 4px;
+}
+
+.block-overlay {
+  min-width: 300px;
+  min-height: 300px;
+}
+
+.time-progress {
+  min-width: 300px;
+  min-height: 300px;
+}
+
+.time-progress trough {
+  background-color: transparent;
+  border-radius: 0;
+  min-width: 300px;
+  min-height: 300px;
+}
+
+.time-progress progress {
+  border-radius: 0;
+  transition: all 1s linear;
+  background-color: rgba($color-primary, 0.25 * $opacity-scale); /* fallback */
+}
+
+// Each element uses its override colour (or falls back) × its own opacity × global scale
+.color-hour progress {
+  background-color: rgba(if($color-hour, $color-hour, $color-primary), $opacity-hour * $opacity-scale);
+}
+
+.color-min progress {
+  background-color: rgba(if($color-min, $color-min, $color-secondary), $opacity-min * $opacity-scale);
+}
+
+.color-sec progress {
+  background-color: rgba(if($color-sec, $color-sec, $color-primary), $opacity-sec * $opacity-scale);
+}
+
+.color-month progress {
+  background-color: rgba(if($color-month, $color-month, $color-secondary), $opacity-month * $opacity-scale);
+}
+
+.color-day progress {
+  background-color: rgba(if($color-day, $color-day, $color-primary), $opacity-day * $opacity-scale);
+}
+
+.time-progress.horizontal progress {
+  min-height: 300px;
+}
+
+.time-progress.vertical progress {
+  min-width: 300px;
+}

@@ -1,0 +1,41 @@
+; =============================================================================
+; CONFIG
+; =============================================================================
+(defvar greeting-debug false)
+; =============================================================================
+
+(defpoll greeting-text
+  :interval "1h"
+  :initial  "Hey, Zain"
+  `bash /home/zainelsell/Desktop/eww-widgets/greeting-module/greeting.sh`)
+
+(defpoll quote-text
+  :interval "30m"
+  :initial  ""
+  `bash /home/zainelsell/Desktop/eww-widgets/greeting-module/quote.sh`)
+
+(defwidget greeting-widget []
+  (box
+    :orientation "v"
+    :halign      "center"
+    :valign      "center"
+    :space-evenly false
+    :spacing      16
+    (label
+      :class "greeting-label"
+      :text  greeting-text
+      :halign "center"
+      :wrap  false)
+    (label
+      :class "quote-label"
+      :text  quote-text
+      :halign "center"
+      :wrap  true)))
+
+(defwindow greeting
+  :monitor  1
+  :geometry (geometry :x "0px" :y "0px" :anchor "center")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (greeting-widget))

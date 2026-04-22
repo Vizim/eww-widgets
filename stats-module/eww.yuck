@@ -1,0 +1,42 @@
+(defwidget stat-ring [icon_path label color thickness]
+  (box :class "ring-box" :orientation "v" :space-evenly false :halign "center" :valign "center"
+    (box :class "static-circle" :style "border: 2px solid ${color};" :halign "center" :valign "center"
+      (image :path icon_path :image-width 26 :image-height 26 :halign "center" :valign "center"))
+    (label :class "ring-label" :text label :style "color: ${color};")))
+
+(defwidget stats []
+  (box :class "stats-box" :orientation "v" :space-evenly false :spacing 15 :halign "center" :valign "center"
+    (stat-ring :icon_path "icons/cpu_${cpu > 80 ? 'red5' : cpu > 60 ? 'red4' : cpu > 40 ? 'red3' : cpu > 20 ? 'red2' : 'white'}.svg"  
+               :label "${cpu}%"  
+               :color {cpu > 80 ? "#ff6b6b" : cpu > 60 ? "#ff8585" : cpu > 40 ? "#ffadad" : cpu > 20 ? "#ffd6d6" : "white"} 
+               :thickness 4)
+    (stat-ring :icon_path "icons/ram_${ram > 80 ? 'red5' : ram > 60 ? 'red4' : ram > 40 ? 'red3' : ram > 20 ? 'red2' : 'white'}.svg"  
+               :label "${ram}%"  
+               :color {ram > 80 ? "#ff6b6b" : ram > 60 ? "#ff8585" : ram > 40 ? "#ffadad" : ram > 20 ? "#ffd6d6" : "white"} 
+               :thickness 8)
+    (stat-ring :icon_path "icons/gpu_${gpu > 80 ? 'red5' : gpu > 60 ? 'red4' : gpu > 40 ? 'red3' : gpu > 20 ? 'red2' : 'white'}.svg"  
+               :label "${gpu}%"  
+               :color {gpu > 80 ? "#ff6b6b" : gpu > 60 ? "#ff8585" : gpu > 40 ? "#ffadad" : gpu > 20 ? "#ffd6d6" : "white"} 
+               :thickness 12)
+    (stat-ring :icon_path "icons/temp_${temp > 180 ? 'red5' : temp > 150 ? 'red4' : temp > 120 ? 'red3' : temp > 90 ? 'red2' : 'white'}.svg" 
+               :label "${temp}°F" 
+               :color {temp > 180 ? "#ff6b6b" : temp > 150 ? "#ff8585" : temp > 120 ? "#ffadad" : temp > 90 ? "#ffd6d6" : "white"} 
+               :thickness 16)
+    (stat-ring :icon_path "icons/weather_${weather > 90 ? 'red5' : weather > 80 ? 'red4' : weather > 70 ? 'red3' : weather > 60 ? 'red2' : 'white'}.svg" 
+               :label "${weather}°F" 
+               :color {weather > 90 ? "#ff6b6b" : weather > 80 ? "#ff8585" : weather > 70 ? "#ffadad" : weather > 60 ? "#ffd6d6" : "white"} 
+               :thickness 20)))
+
+(defpoll cpu  :interval "2s" `top -bn1 | grep "Cpu(s)" | awk '{print int($2)}'`)
+(defpoll ram  :interval "2s" `free | awk '/Mem:/ {printf int($3/$2*100)}'`)
+(defpoll gpu  :interval "2s" `nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits`)
+(defpoll temp :interval "2s" `sensors | grep 'Package id 0' | awk '{print int($4 * 1.8 + 32)}'`)
+(defpoll weather :interval "15m" `curl -s "https://api.open-meteo.com/v1/forecast?latitude=39.5317&longitude=-104.8916&current=apparent_temperature&temperature_unit=fahrenheit" | jq -r '.current.apparent_temperature' | awk '{print int($1+0.5)}' || echo 0`)
+
+(defwindow stats-widget
+  :monitor 0
+  :geometry (geometry :x "20px" :y "20px" :width "100px" :height "550px" :anchor "top left")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (stats))

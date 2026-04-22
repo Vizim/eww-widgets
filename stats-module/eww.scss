@@ -1,0 +1,31 @@
+* { all: unset; }
+
+.stats-box {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+}
+
+.ring-box {
+  min-width: 60px;
+  min-height: 80px;
+  margin: 10px 0;
+}
+
+.static-circle {
+  min-height: 60px;
+  min-width: 60px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.icon-wrap {
+  min-height: 60px;
+  min-width: 60px;
+}
+
+.ring-label {
+  font-size: 14px;
+  font-weight: 800;
+  margin-top: 8px;
+}
