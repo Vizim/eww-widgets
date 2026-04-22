@@ -1,0 +1,15 @@
+# Cache files
+~/.cache/eww-*.txt
+
+# Eww runtime sockets
+/run/user/
+
+# Editor artifacts
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db

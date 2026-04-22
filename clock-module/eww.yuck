@@ -1,0 +1,84 @@
+; =============================================================================
+; CONFIG — toggle these to change behaviour
+; =============================================================================
+(defvar debug false)   ; Set to true to show HR/MIN/SEC/MON/DAY labels
+; =============================================================================
+
+(defpoll current_hour :interval "1s" :initial "0" `date +%H`)
+(defpoll current_min  :interval "1s" :initial "0" `date +%M`)
+(defpoll current_sec  :interval "1s" :initial "0" `date +%S`)
+(defpoll current_month :interval "1h" :initial "1" `date +%m`)
+(defpoll current_day :interval "1h" :initial "1" `date +%d`)
+
+; Hour: Left → Right
+(defwidget block-time-hour []
+  (overlay :class "block-overlay"
+    (progress :class "time-progress horizontal color-hour" :value {current_hour * 100 / 23} :orientation "h" :flipped false)
+    (label :class "debug-label" :halign "start" :valign "end" :visible debug :text "HR")))
+
+; Min: Top → Bottom
+(defwidget block-time-min []
+  (overlay :class "block-overlay"
+    (progress :class "time-progress vertical color-min" :value {current_min * 100 / 59} :orientation "v" :flipped false)
+    (label :class "debug-label" :halign "start" :valign "start" :visible debug :text "MIN")))
+
+; Sec: Right → Left
+(defwidget block-time-sec []
+  (overlay :class "block-overlay"
+    (progress :class "time-progress horizontal color-sec" :value {current_sec * 100 / 59} :orientation "h" :flipped true)
+    (label :class "debug-label" :halign "end" :valign "end" :visible debug :text "SEC")))
+
+; Month: Right → Left
+(defwidget block-date-month []
+  (overlay :class "block-overlay"
+    (progress :class "time-progress horizontal color-month" :value {current_month * 100 / 12} :orientation "h" :flipped true)
+    (label :class "debug-label" :halign "start" :valign "center" :visible debug :text "MON")))
+
+; Day: Bottom → Top
+(defwidget block-date-day []
+  (overlay :class "block-overlay"
+    (progress :class "time-progress vertical color-day" :value {current_day * 100 / 31} :orientation "v" :flipped true)
+    (label :class "debug-label" :halign "end" :valign "start" :visible debug :text "DAY")))
+
+
+
+(defwindow time-hour
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (block-time-hour))
+
+(defwindow time-min
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (block-time-min))
+
+(defwindow time-sec
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (block-time-sec))
+
+(defwindow date-month
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (block-date-month))
+
+(defwindow date-day
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
+  :stacking "bg"
+  :exclusive false
+  :focusable false
+  (block-date-day))
+
