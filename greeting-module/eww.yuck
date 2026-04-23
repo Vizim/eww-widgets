@@ -33,7 +33,7 @@
       :wrap  true)))
 
 (defwindow greeting
-  :monitor  1
+  :monitor  0
   :geometry (geometry :x "0px" :y "0px" :anchor "center")
   :stacking "bg"
   :exclusive false

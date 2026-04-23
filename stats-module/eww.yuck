@@ -34,7 +34,7 @@
 (defpoll weather :interval "15m" `curl -s "https://api.open-meteo.com/v1/forecast?latitude=39.5317&longitude=-104.8916&current=apparent_temperature&temperature_unit=fahrenheit" | jq -r '.current.apparent_temperature' | awk '{print int($1+0.5)}' || echo 0`)
 
 (defwindow stats-widget
-  :monitor 0
+  :monitor 1
   :geometry (geometry :x "20px" :y "20px" :width "100px" :height "550px" :anchor "top left")
   :stacking "bg"
   :exclusive false
