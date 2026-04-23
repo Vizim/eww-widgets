@@ -33,7 +33,7 @@
       :wrap  true)))
 
 (defwindow greeting
-  :monitor  0
+  :monitor  "HDMI-A-1"
   :geometry (geometry :x "0px" :y "0px" :anchor "center")
   :stacking "bg"
   :exclusive false
