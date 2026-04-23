@@ -43,7 +43,7 @@
 
 
 (defwindow time-hour
-  :monitor 0
+  :monitor 1
   :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
   :stacking "bg"
   :exclusive false
@@ -51,7 +51,7 @@
   (block-time-hour))
 
 (defwindow time-min
-  :monitor 0
+  :monitor 1
   :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
   :stacking "bg"
   :exclusive false
@@ -59,7 +59,7 @@
   (block-time-min))
 
 (defwindow time-sec
-  :monitor 0
+  :monitor 1
   :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
   :stacking "bg"
   :exclusive false
@@ -67,7 +67,7 @@
   (block-time-sec))
 
 (defwindow date-month
-  :monitor 0
+  :monitor 1
   :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
   :stacking "bg"
   :exclusive false
@@ -75,7 +75,7 @@
   (block-date-month))
 
 (defwindow date-day
-  :monitor 0
+  :monitor 1
   :geometry (geometry :x "0px" :y "0px" :width "300px" :height "300px" :anchor "center")
   :stacking "bg"
   :exclusive false

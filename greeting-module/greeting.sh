@@ -6,7 +6,7 @@ NAME="friend"
 # =============================================================================
 
 CACHE_FILE="$HOME/.cache/eww-last-greeting.txt"
-HOUR=$(date +%H)
+HOUR=$(( 10#$(date +%H) ))
 
 # ── Time-bucket phrase pools ──────────────────────────────────────────────────
 
