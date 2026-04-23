@@ -27,10 +27,10 @@
                :color {weather > 90 ? "#ff6b6b" : weather > 80 ? "#ff8585" : weather > 70 ? "#ffadad" : weather > 60 ? "#ffd6d6" : "white"} 
                :thickness 20)))
 
-(defpoll cpu  :interval "2s" `top -bn1 | grep "Cpu(s)" | awk '{print int($2)}'`)
-(defpoll ram  :interval "2s" `free | awk '/Mem:/ {printf int($3/$2*100)}'`)
-(defpoll gpu  :interval "2s" `nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits`)
-(defpoll temp :interval "2s" `sensors | grep 'Package id 0' | awk '{print int($4 * 1.8 + 32)}'`)
+(defpoll cpu  :interval "3s"  `bash /home/zainelsell/Desktop/eww-widgets/stats-module/cpu.sh`)
+(defpoll ram  :interval "3s"  `awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print int((t-a)*100/t)}' /proc/meminfo`)
+(defpoll gpu  :interval "3s"  `nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits`)
+(defpoll temp :interval "10s" `sensors | grep 'Package id 0' | awk '{print int($4 * 1.8 + 32)}'`)
 (defpoll weather :interval "15m" `curl -s "https://api.open-meteo.com/v1/forecast?latitude=39.5317&longitude=-104.8916&current=apparent_temperature&temperature_unit=fahrenheit" | jq -r '.current.apparent_temperature' | awk '{print int($1+0.5)}' || echo 0`)
 
 (defwindow stats-widget

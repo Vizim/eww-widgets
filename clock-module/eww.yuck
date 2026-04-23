@@ -4,9 +4,9 @@
 (defvar debug false)   ; Set to true to show HR/MIN/SEC/MON/DAY labels
 ; =============================================================================
 
-(defpoll current_hour :interval "1s" :initial "0" `date +%H`)
-(defpoll current_min  :interval "1s" :initial "0" `date +%M`)
-(defpoll current_sec  :interval "1s" :initial "0" `date +%S`)
+(defpoll current_hour  :interval "60s" :initial "0" `date +%H`)
+(defpoll current_min  :interval "60s" :initial "0" `date +%M`)
+(defpoll current_sec  :interval "1s"  :initial "0" `date +%S`)
 (defpoll current_month :interval "1h" :initial "1" `date +%m`)
 (defpoll current_day :interval "1h" :initial "1" `date +%d`)
 
