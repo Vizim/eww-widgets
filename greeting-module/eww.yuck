@@ -5,13 +5,13 @@
 ; =============================================================================
 
 (defpoll greeting-text
-  :interval "1h"
+  :interval "5m"
   :initial  "Hey there"
   `bash greeting.sh`)
 
 (defpoll quote-text
   :interval "30m"
-  :initial  ""
+  :initial  "\"The secret of getting ahead is getting started.\" — Mark Twain"
   `bash quote.sh`)
 
 (defwidget greeting-widget []

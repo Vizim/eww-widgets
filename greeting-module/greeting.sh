@@ -6,6 +6,7 @@ NAME="friend"
 # =============================================================================
 
 CACHE_FILE="$HOME/.cache/eww-last-greeting.txt"
+BUCKET_FILE="$HOME/.cache/eww-greeting-bucket.txt"
 HOUR=$(( 10#$(date +%H) ))
 
 # ── Time-bucket phrase pools ──────────────────────────────────────────────────
@@ -123,27 +124,29 @@ night=(
   "Rest is productive too, $NAME"
 )
 
-# ── Pick the correct pool ─────────────────────────────────────────────────────
+# ── Pick the correct pool and bucket label ────────────────────────────────────
 
-if   (( HOUR >= 0  && HOUR <= 5  )); then pool=("${early_morning[@]}")
-elif (( HOUR >= 6  && HOUR <= 11 )); then pool=("${morning[@]}")
-elif (( HOUR >= 12 && HOUR <= 16 )); then pool=("${afternoon[@]}")
-elif (( HOUR >= 17 && HOUR <= 20 )); then pool=("${evening[@]}")
-else                                      pool=("${night[@]}")
+if   (( HOUR >= 0  && HOUR <= 5  )); then pool=("${early_morning[@]}"); bucket="early_morning"
+elif (( HOUR >= 6  && HOUR <= 11 )); then pool=("${morning[@]}");       bucket="morning"
+elif (( HOUR >= 12 && HOUR <= 16 )); then pool=("${afternoon[@]}");     bucket="afternoon"
+elif (( HOUR >= 17 && HOUR <= 20 )); then pool=("${evening[@]}");       bucket="evening"
+else                                      pool=("${night[@]}");          bucket="night"
 fi
 
-# ── Pick a random phrase, avoid repeating the last one ───────────────────────
+# ── Serve cached phrase if still in the same time bucket ─────────────────────
 
-last=""
-[[ -f "$CACHE_FILE" ]] && last=$(cat "$CACHE_FILE")
+last_bucket=""
+[[ -f "$BUCKET_FILE" ]] && last_bucket=$(cat "$BUCKET_FILE")
 
+if [[ "$last_bucket" == "$bucket" && -f "$CACHE_FILE" ]]; then
+  printf '%s' "$(cat "$CACHE_FILE")"
+  exit 0
+fi
+
+# Bucket changed — pick a new phrase
 count=${#pool[@]}
 phrase="${pool[RANDOM % count]}"
 
-# Re-roll once if we hit the same phrase
-if [[ "$phrase" == "$last" && $count -gt 1 ]]; then
-  phrase="${pool[RANDOM % count]}"
-fi
-
-echo "$phrase" > "$CACHE_FILE"
+echo "$bucket"  > "$BUCKET_FILE"
+echo "$phrase"  > "$CACHE_FILE"
 printf '%s' "$phrase"
