@@ -1,0 +1,458 @@
+// Center cluster styling. Port of the middle dashboard from
+// github.com/husseinhareb/hyprland-eww, colours sampled from the reference shot.
+
+// ===================================================================
+//  THEME
+//
+//  Two parts:
+//   1. Knobs below - opacity, radius, font, fixed brand colours. Hand-edited,
+//      never rewritten by any script.
+//   2. The AUTO-PALETTE block - hue-derived colours. Hand-edit them freely, or
+//      regenerate them from the desktop wallpaper with
+//        ./scripts/theme-from-wallpaper.sh
+//      which replaces everything between the two AUTO-PALETTE markers and
+//      leaves the rest of this file alone.
+//
+//  Apply any change with ./cluster.sh reload
+// ===================================================================
+
+// -- Surface knobs ---------------------------------------------------
+$panel-alpha:      0.78;      // 1.0 = solid like the reference, 0.0 = invisible
+$panel-border:     #161616;   // panel outline
+$panel-border-a:   0.55;
+$panel-radius:     12px;
+$panel-border-w:   1px;
+
+// -- Type ------------------------------------------------------------
+$font:             "JetBrains Mono", "Hack Nerd Font", monospace;
+
+// -- Fixed accents (independent of the wallpaper) --------------------
+$accent-volume:    #5c64ff;   // volume slider fill
+$accent-mic:       #85da6c;   // mic slider fill
+$accent-cpu:       #fd6b85;   // cpu ring
+$accent-mem:       #6f57f5;   // memory ring
+$armed:            #ff5a5a;   // power tile waiting for its confirm click
+
+// Power tile colours. Keep in step with SYMBOLIC in scripts/sync-icons.sh, which
+// tints the glyphs to match, then re-run that script.
+$p-off:            #ff7a5c;
+$p-suspend:        #ffd166;
+$p-logout:         #4fc3e8;
+$p-reboot:         #7fd18a;
+
+// -- Component fills -------------------------------------------------
+// ($ring-track, $pill and $transport-bg live in the AUTO-PALETTE block below,
+//  because they have to flip with the light/dark mode.)
+$slider-track:     #282c34;
+
+// The disc on the profile card. Fixed rather than hue-derived, so it stays
+// purple whatever the wallpaper is.
+$tile-face:        #241243;   // deep purple disc behind the profile art
+
+// -- BC-Lock block clock (ported from ../clock-module) ---------------
+// The module's neon orange/cyan/lime/magenta/yellow fought the purple cluster,
+// so the bars are retuned to one violet-to-blue ramp. Each bar keeps its own
+// base opacity; $bc-scale is the global multiplier ($bc-scale: 0 hides the bars
+// and leaves a plain clock panel).
+$bc-scale:         0.42;
+$bc-hour:          #7c3aed;   $bc-a-hour:  0.40;   // violet
+$bc-min:           #2563eb;   $bc-a-min:   0.25;   // blue
+$bc-sec:           #a855f7;   $bc-a-sec:   0.35;   // light purple
+$bc-month:         #4f46e5;   $bc-a-month: 0.20;   // indigo
+$bc-day:           #0ea5e9;   $bc-a-day:   0.50;   // sky blue
+
+// Digits sit over the bars, so they are near-white rather than coloured. Date is
+// dimmed slightly so it reads as secondary to the time.
+$bc-ink:           #f5f3fc;   // time
+$bc-ink-dim:       #cdc4e8;   // date
+
+// -- Site tile colours (brand colours, left alone) -------------------
+$c-github:         #1b1f23;
+$c-youtube:        #cd201e;
+$c-reddit:         #ff4500;
+$c-whatsapp:       #29b6f6;   // blue kept from the old telegram tile, by request
+
+// -- Interaction -----------------------------------------------------
+$hover-wash:       rgba(255, 255, 255, 0.20);
+$press-wash:       rgba(0, 0, 0, 0.16);
+$anim:             140ms ease-out;
+
+// -- Hue-derived palette ---------------------------------------------
+// Regenerate from the wallpaper: ./scripts/theme-from-wallpaper.sh
+  // AUTO-PALETTE START - written by scripts/theme-from-wallpaper.sh
+  // source: wallpapersden.com_macos-12-monterey-stock-dark_3840x2160.jpg
+  // base hue: 260   mode: dark
+  $panel         : #1a1523;
+  $ink           : #eceaf1;
+  $ink-soft      : #a9a0ba;
+  $ring-inner    : #3e3154;
+  $ring-track    : #4e485b;
+  $pill          : #412f41;
+  $transport-bg  : #e9e7ee;
+  $accent-uptime : #c14469;
+  $accent-song   : #92b9b7;
+  $accent-artist : #ebc789;
+  $accent-weather: #ebdbc7;
+  // AUTO-PALETTE END
+
+// ===================================================================
+
+$surface: rgba($panel, $panel-alpha);
+$outline: rgba($panel-border, $panel-border-a);
+
+* {
+  all: unset;
+  font-family: $font;
+  color: $ink;
+}
+
+// The toplevel must never paint. Anything it painted would be an opaque
+// rectangle the size of the whole window, and every window here is sized to
+// exactly one panel.
+window { background-color: transparent; }
+
+// Shared panel shell
+.wid_get {
+  background-color: $surface;
+  border: $panel-border-w solid $outline;
+  border-radius: $panel-radius;
+}
+
+/** Profile card ****************************************************/
+.profilecard { padding: 12px; }
+
+.termtile {
+  min-width: 180px;
+  min-height: 180px;
+  margin: 6px 0px 0px 0px;
+  border-radius: 100%;
+  background-color: $tile-face;
+  background-image: url("images/icons/ui/profile.png");
+  background-size: 180px;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: background-color $anim;
+}
+.termtile:hover  { background-color: lighten($tile-face, 10%); }
+.termtile:active { background-color: darken($tile-face, 6%); }
+
+.username {
+  font-size: 26px;
+  margin-top: 18px;
+  color: $ink;
+}
+
+// Reused from the greeting-module (see scripts/greeting.sh)
+.greeting {
+  font-size: 14px;
+  font-weight: bold;
+  color: $ink;
+  margin-top: 12px;
+}
+
+.quote {
+  font-size: 11px;
+  font-style: italic;
+  color: $ink-soft;
+  margin-top: 10px;
+}
+
+/* AI launchers: Claude / Hermes / ChatGPT (see scripts/ai.sh) */
+.airow { margin: 0px 0px 26px 0px; }
+
+.aiicon {
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0px 7px;
+  border-radius: 12px;
+  background-size: 46px;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: background-color $anim;
+}
+.aiicon:hover  { background-color: $hover-wash; }
+.aiicon:active { background-color: $press-wash; }
+
+.ai-claude  { background-image: url("images/icons/ai/claude.png"); }
+.ai-hermes  { background-image: url("images/icons/ai/hermes.png"); }
+.ai-chatgpt { background-image: url("images/icons/ai/chatgpt.png"); }
+
+.uptimerow { margin: 0px 0px 4px 2px; }
+
+.uptimeicon {
+  min-width: 22px;
+  min-height: 22px;
+  background-image: url("images/icons/ui/uptime.png");
+  background-size: 22px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.uptime {
+  font-size: 17px;
+  font-weight: bold;
+  color: $accent-uptime;
+  margin-left: 8px;
+}
+
+/** Website tiles ***************************************************/
+.linktile {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 92px;
+  border-radius: $panel-radius;
+  transition: background-color $anim;
+}
+.linktile.github   { background-color: $c-github; }
+.linktile.youtube  { background-color: $c-youtube; }
+.linktile.reddit   { background-color: $c-reddit; }
+.linktile.whatsapp { background-color: $c-whatsapp; }
+
+.linktile.github:hover   { background-color: lighten($c-github, 12%); }
+.linktile.youtube:hover  { background-color: lighten($c-youtube, 10%); }
+.linktile.reddit:hover   { background-color: lighten($c-reddit, 10%); }
+.linktile.whatsapp:hover { background-color: lighten($c-whatsapp, 10%); }
+
+/** Media pane ******************************************************/
+.mediapane { padding: 0px; }
+
+.album_art {
+  min-width: 220px;
+  min-height: 220px;
+  margin: 18px;
+  border-radius: 14px;
+  background-size: cover;      // fill the square regardless of the cover's aspect
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.mediameta { margin: 0px 18px 0px 0px; }
+
+.song {
+  font-size: 19px;
+  font-weight: bold;
+  color: $accent-song;
+  margin-bottom: 8px;
+}
+
+.artist {
+  font-size: 18px;
+  color: $accent-artist;
+  margin-bottom: 26px;
+}
+
+.tprev, .tnext {
+  min-width: 42px;
+  min-height: 42px;
+  background-size: 32px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 100%;
+  transition: background-color $anim;
+}
+.tprev {
+  margin-right: 16px;
+  background-image: url("images/icons/music/prev.png");
+}
+.tnext {
+  margin-left: 16px;
+  background-image: url("images/icons/music/next.png");
+}
+
+.tplay {
+  min-width: 58px;
+  min-height: 58px;
+  border-radius: 100%;
+  background-color: $transport-bg;
+  background-size: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: background-color $anim;
+}
+
+.tprev:hover, .tnext:hover { background-color: $hover-wash; }
+.tplay:hover               { background-color: lighten($transport-bg, 18%); }
+.tprev:active, .tnext:active, .tplay:active { background-color: $press-wash; }
+
+/** Block clock: BC-Lock bars with the staircases over them **********/
+// The bars are inset rather than edge to edge. A progress fill is a plain
+// rectangle that the panel's border-radius does not clip, so a full-bleed bar
+// squares off the panel's rounded corners. Insetting keeps the bars clear of
+// the corners and reads as a screen sitting inside the panel.
+.blockpane { padding: 10px; }
+
+// A GTK progress bar has a thin natural size, so the widget, its trough and the
+// fill's cross axis all need explicit sizes or the bars render as edge strips
+// instead of filling the square. These are the blockclock window's :geometry
+// minus its 1px border and the .blockpane padding above, so keep them in step.
+$bc-w: 238px;
+$bc-h: 239px;
+
+.blockbar, .blockbar trough {
+  min-width: $bc-w;
+  min-height: $bc-h;
+  background-color: transparent;
+  border-radius: 8px;
+}
+.blockbar progress {
+  border-radius: 8px;
+  transition: all 1s linear;
+}
+.bar-h progress { min-height: $bc-h; }
+.bar-v progress { min-width: $bc-w; }
+
+.bb-hour  progress { background-color: rgba($bc-hour,  $bc-a-hour  * $bc-scale); }
+.bb-min   progress { background-color: rgba($bc-min,   $bc-a-min   * $bc-scale); }
+.bb-sec   progress { background-color: rgba($bc-sec,   $bc-a-sec   * $bc-scale); }
+.bb-month progress { background-color: rgba($bc-month, $bc-a-month * $bc-scale); }
+.bb-day   progress { background-color: rgba($bc-day,   $bc-a-day   * $bc-scale); }
+
+.blockdigits { padding: 4px 8px; }
+
+// Both columns step down and to the right, like the reference. The negative top
+// margins pull each step up under the one above so the run reads as a staircase
+// rather than three separate lines.
+.hour   { font-size: 54px; font-weight: bold; color: $bc-ink; }
+.minute { font-size: 38px; font-weight: bold; color: $bc-ink;     margin: -10px 0px 0px 26px; }
+.second { font-size: 19px;                    color: $bc-ink-dim; margin: -6px 0px 0px 56px; }
+
+.dayname { font-size: 46px; font-weight: bold; color: $bc-ink-dim; }
+.day     { font-size: 38px; font-weight: bold; color: $bc-ink-dim; margin: -8px 0px 0px 26px; }
+.month   { font-size: 19px; font-weight: bold; color: $bc-ink-dim; margin: -6px 0px 0px 56px; }
+
+// The bars are bright and land under the text, so keep the digits legible.
+.hour, .minute, .second, .dayname, .day, .month {
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
+}
+
+/** App launchers ***************************************************/
+.appgrid { padding: 4px; }
+
+.approw + .approw { margin-top: 26px; }
+
+.appicon {
+  min-width: 70px;
+  min-height: 70px;
+  margin: 0px 6px;
+  border-radius: 14px;
+  background-size: 62px;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: background-color $anim;
+}
+.appicon:hover  { background-color: $hover-wash; }
+.appicon:active { background-color: $press-wash; }
+
+/** Power tiles *****************************************************/
+.powertile { transition: background-color $anim; }
+.powertile:hover { background-color: lighten($panel, 8%); }
+
+// The chip is the tinted rounded square holding the glyph, centred in the tile.
+.powerchip {
+  min-width: 84px;
+  min-height: 84px;
+  border-radius: 22px;
+  background-size: 46px;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: background-color $anim;
+}
+.chip-poweroff { background-color: rgba($p-off,     0.22); }
+.chip-suspend  { background-color: rgba($p-suspend, 0.22); }
+.chip-logout   { background-color: rgba($p-logout,  0.22); }
+.chip-reboot   { background-color: rgba($p-reboot,  0.22); }
+
+.powertile:hover .chip-poweroff { background-color: rgba($p-off,     0.38); }
+.powertile:hover .chip-suspend  { background-color: rgba($p-suspend, 0.38); }
+.powertile:hover .chip-logout   { background-color: rgba($p-logout,  0.38); }
+.powertile:hover .chip-reboot   { background-color: rgba($p-reboot,  0.38); }
+
+// First click arms the tile, second click runs it, leaving the tile disarms it.
+.powertile.armed {
+  background-color: rgba($armed, 0.28);
+  border: 2px solid $armed;
+}
+.powertile.armed .powerchip { background-color: rgba($armed, 0.45); }
+
+/** Audio sliders ***************************************************/
+.sysctl { padding: 14px; }
+
+// No backlight on this machine, so the reference's brightness row is dropped and
+// the two remaining rows are spread to keep the panel balanced.
+.volrow { margin-bottom: 64px; }
+
+.ctlicon {
+  min-width: 26px;
+  min-height: 26px;
+  margin-right: 14px;
+  background-size: 26px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.iconvolume { background-image: url("images/icons/ui/volume.png"); }
+.iconmic    { background-image: url("images/icons/ui/mic.png"); }
+
+.ctlscale trough {
+  min-width: 140px;
+  min-height: 18px;
+  border-radius: 10px;
+  background-color: $slider-track;
+}
+.ctlscale trough highlight { border-radius: 10px; }
+
+.volrow .ctlscale trough highlight { background-color: $accent-volume; }
+.microw .ctlscale trough highlight { background-color: $accent-mic; }
+
+/** Weather + CPU / memory rings ************************************/
+.resources { padding: 6px; }
+
+.wxrow { margin-bottom: 14px; }
+
+.wxicon {
+  min-width: 40px;
+  min-height: 40px;
+  margin-right: 12px;
+  background-size: 36px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.wxtemp {
+  font-size: 22px;
+  font-weight: bold;
+  color: $accent-weather;
+}
+
+.wxcond {
+  font-size: 11px;
+  color: $ink-soft;
+}
+
+.res_box { padding: 4px; }
+
+.res_cpu, .res_mem {
+  background-color: $ring-track;
+  border-radius: 100%;
+}
+.res_cpu { color: $accent-cpu; }
+.res_mem { color: $accent-mem; }
+
+.res_circle_small {
+  background-color: $ring-inner;
+  border-radius: 100%;
+  padding: 27px;
+  font-size: 10px;
+  font-weight: bold;
+  color: $ink;
+}
+
+.res_text {
+  background-color: $pill;
+  border: 1px solid $panel-border;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 1px 8px;
+  margin-top: 8px;
+  color: $ink;
+}

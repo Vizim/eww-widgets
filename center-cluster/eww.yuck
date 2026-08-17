@@ -1,0 +1,283 @@
+;; Center cluster - a COSMIC/Wayland port of the middle dashboard from
+;; github.com/husseinhareb/hyprland-eww. Top bar and side panels are not part
+;; of this config; the cluster is the whole design target.
+;;
+;; WINDOW/INPUT MODEL (measured on this machine, see README):
+;;   An eww window's surface is max(:geometry, content natural size), and the
+;;   WHOLE surface takes pointer input - transparent pixels included. So every
+;;   window below is sized to exactly one visible panel and the panel paints
+;;   edge to edge. The gaps between panels belong to no window, which is what
+;;   lets clicks in the gaps reach the application underneath.
+;;   Never give a window a :geometry larger than the panel it draws.
+;;
+;; LAYOUT GRID (HDMI-A-1, 2560x1440; usable layer-shell area starts 32px down,
+;; under the COSMIC panel, so y values below are relative to that).
+;;   cluster 1302x542, origin x 629 / y 433 -> centred in the usable area.
+;;
+;;   col x:  629 profile | 869 links | 1009 media/blockclock | 1571 power | 1711 sys
+;;   row y:  433 top     | 714 bottom (tiles also 574 / 855)
+
+;; ** Variables ***********************************************************************
+
+;; Clock. HOUR is 12-hour for display; HOUR24 drives the block-clock bar.
+(defpoll HOUR    :interval "1s" `date +%I`)
+(defpoll HOUR24  :interval "1s" `date +%H`)
+(defpoll MINUTE  :interval "1s" `date +%M`)
+(defpoll SECOND  :interval "1s" `date +%S`)
+(defpoll DAYNAME :interval "10s" `date +%a`)
+(defpoll DAY     :interval "10s" `date +%d`)
+(defpoll MONTH   :interval "10s" `date +%m`)
+
+;; Profile card
+(defpoll NAME     :interval "1h"  `whoami`)
+(defpoll UPTIME   :interval "30s" `scripts/uptime.sh`)
+(defpoll GREETING :interval "5m"  :initial "" `scripts/greeting.sh greeting`)
+(defpoll QUOTE    :interval "30m" :initial "" `scripts/greeting.sh quote`)
+
+;; Weather (one cached request shared by all three, see scripts/weather.sh)
+(defpoll WX_TEMP :interval "10m" :initial "--" `scripts/weather.sh temp`)
+(defpoll WX_COND :interval "10m" :initial ""   `scripts/weather.sh cond`)
+(defpoll WX_ICON :interval "10m" :initial ""   `scripts/weather.sh icon`)
+
+;; Media (MPRIS)
+(defpoll SONG     :interval "2s" :initial ""  `scripts/player/player.sh song`)
+(defpoll ARTIST   :interval "2s" :initial ""  `scripts/player/player.sh artist`)
+(defpoll COVER    :interval "2s" :initial ""  `scripts/player/player.sh art`)
+(defpoll PLAYICON :interval "1s" :initial ""  `scripts/player/player.sh status`)
+
+;; Audio
+(defpoll VOLUME :interval "1s" :initial 0 `scripts/system.sh volume`)
+(defpoll MIC    :interval "1s" :initial 0 `scripts/system.sh mic`)
+
+;; Resources
+(defpoll CPU_USAGE :interval "2s" :initial 0 `scripts/sys_info.sh --cpu`)
+(defpoll MEM_USAGE :interval "2s" :initial 0 `scripts/sys_info.sh --mem`)
+
+;; Which power tile is armed. A power tile executes only on its second click;
+;; moving the pointer off the tile disarms it.
+(defvar ARMED "")
+
+;; ** Widgets *************************************************************************
+
+;; --- profile card: terminal launcher, user, uptime -----------------------------
+(defwidget w_profile []
+  (box :class "wid_get profilecard" :orientation "v" :space-evenly false
+       :hexpand true :vexpand true
+    (button :class "termtile" :halign "center" :valign "start"
+            :onclick "scripts/apps.sh --terminal")
+    (label :class "username" :halign "center" :text NAME)
+    (label :class "greeting" :halign "center" :wrap true :text GREETING)
+    (label :class "quote"    :halign "center" :wrap true :text QUOTE)
+    (box :vexpand true)
+    (box :class "airow" :orientation "h" :space-evenly false
+         :halign "center" :valign "end"
+      (button :class "aiicon ai-claude"  :onclick "scripts/ai.sh claude")
+      (button :class "aiicon ai-hermes"  :onclick "scripts/ai.sh hermes")
+      (button :class "aiicon ai-chatgpt" :onclick "scripts/ai.sh chatgpt"))
+    (box :class "uptimerow" :orientation "h" :space-evenly false
+         :halign "start" :valign "end"
+      (box :class "uptimeicon")
+      (label :class "uptime" :limit-width 14 :text UPTIME))))
+
+;; --- website tiles --------------------------------------------------------------
+(defwidget w_link [icon name url]
+  (button :class "wid_get linktile ${name}" :hexpand true :vexpand true
+          :onclick "scripts/apps.sh --url ${url}"
+          :style "background-image: url('images/icons/websites/${icon}.png');"))
+
+;; --- media pane -----------------------------------------------------------------
+(defwidget w_media []
+  (box :class "wid_get mediapane" :orientation "h" :space-evenly false
+       :hexpand true :vexpand true
+    (box :class "album_art" :valign "center"
+         :style "background-image: url('${COVER}');")
+    (box :class "mediameta" :orientation "v" :space-evenly false
+         :hexpand true :valign "center"
+      (label :class "song"   :halign "center" :limit-width 20 :text SONG)
+      (label :class "artist" :halign "center" :limit-width 18 :text ARTIST)
+      (box :class "transport" :orientation "h" :space-evenly false :halign "center"
+        (button :class "tprev" :onclick "scripts/player/player.sh prev")
+        (button :class "tplay" :onclick "scripts/player/player.sh toggle"
+                :style "background-image: url('${PLAYICON}');")
+        (button :class "tnext" :onclick "scripts/player/player.sh next")))))
+
+;; --- block clock ------------------------------------------------------------------
+;; NOTE: the .wid_get root must stay align-free and hexpand/vexpand, so the panel
+;; paints the full window. Centring happens on the inner box. Putting :valign on
+;; the root shrinks the paint to its natural size and leaves a transparent,
+;; click-swallowing margin inside the window.
+;;
+;; BC-Lock (../clock-module) merged in: five translucent bars, each filling in its
+;; own direction, with the time and date staircases laid over them.
+;;
+;; All five bars live in ONE overlay inside ONE window. The clock-module runs them
+;; as five stacked windows, which cannot work here - five overlapping input regions
+;; would mean the topmost surface swallows every click over this square.
+(defwidget w_blockclock []
+  (box :class "wid_get blockpane" :hexpand true :vexpand true
+    (overlay :hexpand true :vexpand true
+      (progress :class "blockbar bar-h bb-hour"  :hexpand true :vexpand true
+                :value {HOUR24 * 100 / 23} :orientation "h" :flipped false)
+      (progress :class "blockbar bar-v bb-min"   :hexpand true :vexpand true
+                :value {MINUTE * 100 / 59} :orientation "v" :flipped false)
+      (progress :class "blockbar bar-h bb-sec"   :hexpand true :vexpand true
+                :value {SECOND * 100 / 59} :orientation "h" :flipped true)
+      (progress :class "blockbar bar-h bb-month" :hexpand true :vexpand true
+                :value {MONTH * 100 / 12}  :orientation "h" :flipped true)
+      (progress :class "blockbar bar-v bb-day"   :hexpand true :vexpand true
+                :value {DAY * 100 / 31}    :orientation "v" :flipped true)
+      (box :class "blockdigits" :orientation "h" :space-evenly false
+           :hexpand true :vexpand true
+        (box :class "timecol" :orientation "v" :space-evenly false
+             :valign "center" :halign "start" :hexpand true
+          (label :class "hour"   :halign "start" :text HOUR)
+          (label :class "minute" :halign "start" :text MINUTE)
+          (label :class "second" :halign "start" :text SECOND))
+        (box :class "datecol" :orientation "v" :space-evenly false
+             :valign "center" :halign "start" :hexpand true
+          (label :class "dayname" :halign "start" :text DAYNAME)
+          (label :class "day"     :halign "start" :text DAY)
+          (label :class "month"   :halign "start" :text MONTH))))))
+
+;; --- app launchers ---------------------------------------------------------------
+(defwidget w_app [icon flag]
+  (button :class "appicon" :onclick "scripts/apps.sh ${flag}"
+          :style "background-image: url('images/icons/apps/${icon}.png');"))
+
+(defwidget w_apps []
+  (box :class "wid_get appgrid" :hexpand true :vexpand true
+    (box :orientation "v" :space-evenly false :valign "center" :hexpand true
+      (box :class "approw" :orientation "h" :space-evenly false :halign "center"
+        (w_app :icon "files"    :flag "--files")
+        (w_app :icon "vscode"   :flag "--vscode")
+        (w_app :icon "discord"  :flag "--discord"))
+      (box :class "approw" :orientation "h" :space-evenly false :halign "center"
+        (w_app :icon "warp"     :flag "--warp")
+        (w_app :icon "firefox"  :flag "--firefox")
+        (w_app :icon "obsidian" :flag "--obsidian")))))
+
+;; --- power tiles (two-step confirm) ----------------------------------------------
+;; The button carries .wid_get and fills the window, so the panel paints edge to
+;; edge; the tinted chip is a centred child.
+(defwidget w_power [icon action]
+  (eventbox :hexpand true :vexpand true :onhoverlost "scripts/arm.sh none"
+    (button :hexpand true :vexpand true
+            :class {ARMED == action ? "wid_get powertile armed" : "wid_get powertile"}
+            :onclick {ARMED == action ? "scripts/power.sh ${action}" : "scripts/arm.sh ${action}"}
+      (box :class "powerchip chip-${action}" :halign "center" :valign "center"
+           :style "background-image: url('images/icons/system/${icon}.png');"))))
+
+;; --- audio sliders ----------------------------------------------------------------
+(defwidget w_system []
+  (box :class "wid_get sysctl" :hexpand true :vexpand true
+    (box :orientation "v" :space-evenly false :valign "center" :hexpand true
+      (box :class "ctlrow volrow" :orientation "h" :space-evenly false :valign "center"
+        (box :class "ctlicon iconvolume")
+        (scale :class "ctlscale" :hexpand true :min 0 :max 100 :value VOLUME
+               :onchange "scripts/system.sh set-volume {}"))
+      (box :class "ctlrow microw" :orientation "h" :space-evenly false :valign "center"
+        (box :class "ctlicon iconmic")
+        (scale :class "ctlscale" :hexpand true :min 0 :max 100 :value MIC
+               :onchange "scripts/system.sh set-mic {}")))))
+
+;; --- cpu / memory rings ------------------------------------------------------------
+(defwidget w_ring [cls name value]
+  (box :class "res_box" :orientation "v" :space-evenly false
+       :valign "center" :halign "center"
+    (circular-progress :class "${cls}" :value value :thickness 5
+      (label :class "res_circle_small" :text name))
+    (label :class "res_text" :halign "center" :text "${value}%")))
+
+(defwidget w_resources []
+  (box :class "wid_get resources" :hexpand true :vexpand true
+    (box :orientation "v" :space-evenly false :valign "center" :hexpand true
+      (box :class "wxrow" :orientation "h" :space-evenly false :halign "center"
+        (box :class "wxicon" :valign "center"
+             :style "background-image: url('${WX_ICON}');")
+        (box :orientation "v" :space-evenly false :valign "center"
+          (label :class "wxtemp" :halign "start" :text WX_TEMP)
+          (label :class "wxcond" :halign "start" :text WX_COND)))
+      (box :class "ringrow" :orientation "h" :space-evenly true :halign "fill"
+        (w_ring :cls "res_cpu" :name "CPU"    :value CPU_USAGE)
+        (w_ring :cls "res_mem" :name "MEMORY" :value MEM_USAGE)))))
+
+;; ** Windows *************************************************************************
+;; One window per visible panel. Geometry == panel size, always.
+;; :stacking "bottom" -> sits above the wallpaper but BELOW ordinary windows, so
+;;   opening Firefox covers the cluster, and the cluster is clickable wherever
+;;   the desktop is exposed.
+;;   Do NOT use "bg" here. Measured on cosmic-comp: of eww's four stacking
+;;   values, "fg", "bottom" and "overlay" receive pointer events but "bg" does
+;;   not - a "bg" cluster renders normally and silently ignores every click.
+;; :focusable false -> no layer-shell keyboard grab, so typing always goes to
+;;   the focused application. Pointer input still works.
+
+(defwindow profile
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "629px" :y "433px" :width "220px" :height "542px" :anchor "top left")
+  (w_profile))
+
+(defwindow link_github
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "869px" :y "433px" :width "120px" :height "120px" :anchor "top left")
+  (w_link :icon "github" :name "github" :url "https://github.com"))
+
+(defwindow link_youtube
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "869px" :y "574px" :width "120px" :height "120px" :anchor "top left")
+  (w_link :icon "youtube" :name "youtube" :url "https://youtube.com"))
+
+(defwindow link_reddit
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "869px" :y "714px" :width "120px" :height "120px" :anchor "top left")
+  (w_link :icon "reddit" :name "reddit" :url "https://reddit.com"))
+
+(defwindow link_whatsapp
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "869px" :y "855px" :width "120px" :height "120px" :anchor "top left")
+  (w_link :icon "whatsapp" :name "whatsapp" :url "https://web.whatsapp.com"))
+
+(defwindow media
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1009px" :y "433px" :width "542px" :height "261px" :anchor "top left")
+  (w_media))
+
+(defwindow blockclock
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1009px" :y "714px" :width "260px" :height "261px" :anchor "top left")
+  (w_blockclock))
+
+(defwindow apps
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1289px" :y "714px" :width "262px" :height "261px" :anchor "top left")
+  (w_apps))
+
+(defwindow power_off
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1571px" :y "433px" :width "120px" :height "120px" :anchor "top left")
+  (w_power :icon "shutdown" :action "poweroff"))
+
+(defwindow power_suspend
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1571px" :y "574px" :width "120px" :height "120px" :anchor "top left")
+  (w_power :icon "suspend" :action "suspend"))
+
+(defwindow power_logout
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1571px" :y "714px" :width "120px" :height "120px" :anchor "top left")
+  (w_power :icon "logout" :action "logout"))
+
+(defwindow power_reboot
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1571px" :y "855px" :width "120px" :height "120px" :anchor "top left")
+  (w_power :icon "reboot" :action "reboot"))
+
+(defwindow system
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1711px" :y "433px" :width "220px" :height "261px" :anchor "top left")
+  (w_system))
+
+(defwindow resources
+  :monitor "HDMI-A-1" :stacking "bottom" :focusable false
+  :geometry (geometry :x "1711px" :y "714px" :width "220px" :height "261px" :anchor "top left")
+  (w_resources))

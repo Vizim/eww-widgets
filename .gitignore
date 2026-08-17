@@ -13,3 +13,19 @@
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Generated / third-party icon assets.
+#
+# These are built from the icon theme installed on the machine, from local app
+# installs, or from vendor artwork, so they are not redistributed here. After a
+# fresh clone, rebuild them with:
+#   center-cluster/scripts/sync-icons.sh      app, system, media, weather icons
+#   center-cluster/scripts/sync-ai-icons.sh   Claude / Hermes / ChatGPT marks
+# The profile artwork is not regenerable by script - see center-cluster/README.md.
+center-cluster/images/icons/apps/
+center-cluster/images/icons/system/
+center-cluster/images/icons/ui/
+center-cluster/images/icons/music/
+center-cluster/images/icons/weather/
+center-cluster/images/icons/ai/
+center-cluster/images/icons/websites/whatsapp.png
