@@ -34,7 +34,7 @@
 
 (defwindow greeting
   :monitor  "HDMI-A-1"
-  :geometry (geometry :x "0px" :y "0px" :anchor "center")
+  :geometry (geometry :x "980px" :y "1300px" :anchor "top left" :width "600px" :height "120px")
   :stacking "bg"
   :exclusive false
   :focusable false
