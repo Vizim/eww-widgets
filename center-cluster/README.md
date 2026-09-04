@@ -46,9 +46,10 @@ Tested on Pop!_OS 24.04, COSMIC (cosmic-comp), Wayland, eww 0.6.0, HDMI-A-1 at
 ./cluster.sh status     # list open windows
 ```
 
-`../start-widgets.sh` (run by `~/.config/systemd/user/eww-widgets.service` at
-login) just calls `./cluster.sh restart`, so there is exactly one place that
-knows the window list and a second set of windows cannot appear.
+`~/.config/systemd/user/eww-widgets.service` owns the daemon: it runs
+`eww daemon --no-daemonize` at login, then `./cluster.sh open` to open the
+windows. `start`, `stop` and `restart` delegate to that unit when it exists and
+kill any hand-started daemon first, so a second set of windows cannot appear.
 
 ## Window and input model
 
@@ -167,12 +168,22 @@ Three marks on the profile card, above the uptime line:
 | Hermes | same, against the Hermes session store |
 | ChatGPT | open ChatGPT in Firefox |
 
-`scripts/ai.sh` drives them. The Claude picker reads `~/.claude/projects/*/*.jsonl`
-directly rather than shelling out to `claude --resume`, for two reasons: `--resume`
-only lists sessions for the current directory, and the directory names under
-`projects/` are a lossy mangling of the real path (a dash in a folder name is
-indistinguishable from a separator). Each session file carries the real `cwd`, so
-the picker can list every project in one place and `cd` correctly before resuming.
+`scripts/ai.sh` drives them. The Claude picker lists every session from every
+project, newest first: when it was last used, the project folder, and the title
+Claude Code gave it (or the name you set with `/rename`). A green dot marks a
+session that is already open in another window. Typing searches the title and
+everything you asked in that session, so a session titled "nas setup" still turns
+up for "icloud" if you asked about it there. The preview pane shows the project,
+branch, active dates, cost, a list of your prompts and the last reply. Enter
+resumes the highlighted session in the directory it was started from; Ctrl-N
+starts a new session in that same directory; the first row starts one in `~`.
+
+`scripts/claude-sessions.py` builds the list from `~/.claude/projects/*/*.jsonl`
+rather than shelling out to `claude --resume`, because `--resume` only lists the
+current directory's sessions and the folder names under `projects/` are a lossy
+mangling of the real path. Parsed results are cached in
+`~/.cache/claude-picker/`, so only sessions that changed since the last open are
+re-read.
 
 **Terminal.** The pickers need a terminal that can run a command, and Warp cannot:
 its CLI exposes only cloud/agent subcommands with no exec flag, and its `warp://`

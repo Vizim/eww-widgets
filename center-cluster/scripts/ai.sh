@@ -5,12 +5,7 @@
 #   ai.sh hermes    same, for Hermes
 #   ai.sh chatgpt   open ChatGPT in Firefox
 #
-# TERMINAL NOTE: the two pickers have to run a command inside a terminal, and
-# Warp cannot do that. Its CLI exposes only cloud/agent subcommands (no exec
-# flag), and its warp:// scheme has no run-command action - both were checked
-# against the installed build. So the pickers open in $AI_TERMINAL, default
-# kitty. Anything that only needs "a terminal" (the profile tile) still uses
-# Warp. Set AI_TERMINAL to any terminal whose -e flag runs a command.
+# The pickers run in $AI_TERMINAL (default kitty); Warp cannot run a command.
 set -u
 
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
@@ -19,56 +14,27 @@ export PATH="$HOME/.local/bin:$PATH"   # claude and hermes both live here
 
 spawn() { setsid -f "$@" >/dev/null 2>&1 & }
 
-# Claude Code stores one jsonl per session under ~/.claude/projects/<mangled>/,
-# and scopes `claude --resume` to the current directory. To list every project's
-# sessions in one place we read the files directly; each carries the real `cwd`,
-# which avoids having to un-mangle the directory name (a lossy transform - it
-# cannot tell a dash in a folder name from a path separator).
+# Sessions come from scripts/claude-sessions.py, which reads every project's
+# transcripts and caches a one-line title plus a preview per session.
 pick_claude() {
-  local rows sel sid cwd
-  rows=$(python3 - <<'PY'
-import glob, json, os, time
-out = []
-for f in glob.glob(os.path.expanduser('~/.claude/projects/*/*.jsonl')):
-    cwd = summary = None
-    try:
-        with open(f, encoding='utf-8', errors='ignore') as fh:
-            for line in fh:
-                try:
-                    d = json.loads(line)
-                except Exception:
-                    continue
-                cwd = cwd or d.get('cwd')
-                if summary is None and d.get('type') == 'user':
-                    c = (d.get('message') or {}).get('content')
-                    if isinstance(c, str):
-                        summary = c
-                    elif isinstance(c, list):
-                        for p in c:
-                            if isinstance(p, dict) and p.get('type') == 'text':
-                                summary = p.get('text'); break
-                if cwd and summary:
-                    break
-    except Exception:
-        continue
-    if not cwd:
-        continue
-    s = ' '.join((summary or '').split())[:60]
-    out.append((os.path.getmtime(f), os.path.basename(f)[:-6], cwd, s))
-out.sort(reverse=True)
-for t, sid, cwd, s in out[:40]:
-    when = time.strftime('%m-%d %H:%M', time.localtime(t))
-    print(f"{sid}\t{cwd}\t{when}  {os.path.basename(cwd):<18.18}  {s}")
-PY
-)
-  sel=$(printf '__NEW__\t%s\t+ start a new session\n%s\n' "$HOME" "$rows" \
-        | fzf --delimiter='\t' --with-nth=3.. --reverse --height=100% \
-              --prompt='claude > ' --header='Enter opens, Esc cancels')
+  local cache rows out key sel sid dir
+  cache="${XDG_CACHE_HOME:-$HOME/.cache}/claude-picker"
+  rows=$(CLAUDE_PICKER_CACHE="$cache" python3 "$(dirname "$SELF")/claude-sessions.py") || exit 1
+  # Field 3 is shown, field 4 is the hidden search text (title, project, prompts).
+  out=$(fzf --delimiter='\t' --with-nth=3 --nth=3,4 --exact --ansi --reverse --height=100% \
+            --prompt='claude > ' --expect=ctrl-n \
+            --header='Enter resumes  |  Ctrl-N new session in that project  |  type to search prompts' \
+            --preview="cat '$cache'/{1}.txt" \
+            --preview-window='right,50%,wrap,<110(down,45%,wrap)' <<<"$rows")
+  [ -z "$out" ] && exit 0
+  key=$(head -n1 <<<"$out")
+  sel=$(sed -n 2p <<<"$out")
   [ -z "$sel" ] && exit 0
   sid=$(cut -f1 <<<"$sel")
-  cwd=$(cut -f2 <<<"$sel")
-  cd "$cwd" 2>/dev/null || cd "$HOME" || exit 1
-  if [ "$sid" = "__NEW__" ]; then exec claude; else exec claude --resume "$sid"; fi
+  dir=$(cut -f2 <<<"$sel")
+  cd "$dir" 2>/dev/null || cd "$HOME" || exit 1
+  if [ "$key" = "ctrl-n" ] || [ "$sid" = "__NEW__" ]; then exec claude; fi
+  exec claude --resume "$sid"
 }
 
 # Hermes keeps its own session store; `sessions list` prints a table whose last
