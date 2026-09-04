@@ -5,7 +5,6 @@ import json
 import os
 import re
 import time
-from collections import Counter
 
 CACHE = os.environ.get('CLAUDE_PICKER_CACHE') or os.path.join(
     os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache')), 'claude-picker')
@@ -43,20 +42,18 @@ def real_prompt(d):
 
 
 def scan(path):
-    # root: where the session started, which is where claude stores and resumes it.
-    # cwd: where most of the work happened, for display.
+    # cwd: the directory the session was last in, so a !cd carries over on resume.
+    # root: where it started, kept for the preview.
     s = dict(root=None, cwd=None, branch=None, custom=None, ai=None, prompts=[],
              last=None, reply=None, turns=0, cost=None, started=None)
-    dirs = Counter()
     store = os.path.basename(os.path.dirname(path))
     with open(path, encoding='utf-8', errors='ignore') as fh:
         for line in fh:
             m = CWD_RE.search(line)
             if m:
-                cwd = m.group(1)
-                dirs[cwd] += 1
-                if not s['root'] or (cwd.replace('/', '-') == store and s['root'].replace('/', '-') != store):
-                    s['root'] = cwd
+                s['cwd'] = m.group(1)
+                if not s['root'] or (s['cwd'].replace('/', '-') == store and s['root'].replace('/', '-') != store):
+                    s['root'] = s['cwd']
             if '"type":"' not in line:
                 continue
             if '"type":"assistant"' in line and '"type":"text"' not in line:
@@ -86,7 +83,6 @@ def scan(path):
                 s['last'] = d.get('lastPrompt')
             elif t == 'cost-state':
                 s['cost'] = d.get('totalCostUSD')
-    s['cwd'] = dirs.most_common(1)[0][0] if dirs else s['root']
     return s
 
 
@@ -167,8 +163,8 @@ def preview(sid, d, mtime, live):
         out.append(f"{GREEN}● already open in another window ({live}){RESET}")
     out += [
         '',
-        f"{DIM}project{RESET}    {d['cwd']}",
-        f"{DIM}resumes in{RESET} {d['root']}",
+        f"{DIM}directory{RESET}  {d['cwd']}",
+        f"{DIM}started in{RESET} {d['root']}",
         f"{DIM}branch{RESET}     {d['branch'] or '-'}",
         f"{DIM}active{RESET}     {started} to {when_str(mtime)}",
         f"{DIM}prompts{RESET}    {d['turns']}    {DIM}cost{RESET} {cost}    {DIM}id{RESET} {sid[:8]}",
@@ -195,7 +191,7 @@ def main():
     rows = []
     for path, ent in collect().items():
         d = ent['data']
-        if not d['root'] or (d['turns'] == 0 and not d['custom'] and not d['ai']):
+        if not d['cwd'] or (d['turns'] == 0 and not d['custom'] and not d['ai']):
             continue
         rows.append((ent['key'][0], os.path.basename(path)[:-6], d))
     rows.sort(key=lambda r: r[0], reverse=True)
@@ -212,7 +208,7 @@ def main():
         proj = os.path.basename(d['cwd'].rstrip('/')) or d['cwd']
         mark = f'{GREEN}●{RESET}' if sid in live else ' '
         when = time.strftime('%m-%d %H:%M', time.localtime(mtime))
-        print(f"{sid}\t{d['root']}\t{mark} {DIM}{when}{RESET}  {proj:<18.18}  {one_line(title(d), 80)}\t{haystack(d)}")
+        print(f"{sid}\t{d['cwd']}\t{mark} {DIM}{when}{RESET}  {proj:<18.18}  {one_line(title(d), 80)}\t{haystack(d)}")
 
 
 if __name__ == '__main__':

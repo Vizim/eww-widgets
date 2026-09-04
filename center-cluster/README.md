@@ -175,8 +175,11 @@ session that is already open in another window. Typing searches the title and
 everything you asked in that session, so a session titled "nas setup" still turns
 up for "icloud" if you asked about it there. The preview pane shows the project,
 branch, active dates, cost, a list of your prompts and the last reply. Enter
-resumes the highlighted session in the directory it was started from; Ctrl-N
-starts a new session in that same directory; the first row starts one in `~`.
+resumes the highlighted session in the directory it was last in, so a `!cd`
+from that session carries over; Ctrl-N starts a new session in that same
+directory; the first row starts one in `~`. The list refreshes itself while
+open, so a `/rename` in another window shows up within a couple of seconds
+(Ctrl-R forces it).
 
 `scripts/claude-sessions.py` builds the list from `~/.claude/projects/*/*.jsonl`
 rather than shelling out to `claude --resume`, because `--resume` only lists the
