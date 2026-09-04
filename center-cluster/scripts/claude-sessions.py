@@ -4,6 +4,7 @@ import glob
 import json
 import os
 import re
+import sys
 import time
 
 CACHE = os.environ.get('CLAUDE_PICKER_CACHE') or os.path.join(
@@ -182,16 +183,25 @@ def preview(sid, d, mtime, live):
 
 
 def haystack(d):
-    parts = [title(d), d['cwd'] or '', d['branch'] or ''] + d['prompts']
-    return one_line(' '.join(parts).lower().replace('\t', ' '), 3000)
+    parts = [title(d), d['cwd'] or '', d['branch'] or ''] + d['prompts'] + [d['reply'] or '']
+    return ' '.join(parts).lower()
+
+
+def matches(terms, d):
+    h = haystack(d)
+    return all(t in h for t in terms)
 
 
 def main():
+    # Every keystroke in the picker re-runs this with the query; all terms must appear.
+    terms = ' '.join(sys.argv[1:]).lower().split()
     live = live_sessions()
     rows = []
     for path, ent in collect().items():
         d = ent['data']
         if not d['cwd'] or (d['turns'] == 0 and not d['custom'] and not d['ai']):
+            continue
+        if terms and not matches(terms, d):
             continue
         rows.append((ent['key'][0], os.path.basename(path)[:-6], d))
     rows.sort(key=lambda r: r[0], reverse=True)
@@ -200,7 +210,14 @@ def main():
     with open(os.path.join(CACHE, '__NEW__.txt'), 'w') as fh:
         fh.write(f"{BOLD}New session{RESET}\n\nStarts claude in {home}.\n"
                  f"Ctrl-N on any row starts a new session in that row's project instead.\n")
-    print(f"__NEW__\t{home}\t+ start a new session\tnew")
+    if not terms:
+        print(f"__NEW__\t{home}\t+ start a new session")
+    with open(os.path.join(CACHE, '__CLOUD__.txt'), 'w') as fh:
+        fh.write(f"{BOLD}Cloud session by link{RESET}\n\nPaste a claude.ai/code link or session id and it is\n"
+                 f"pulled down into a local session (claude --teleport).\n\n"
+                 f"Ctrl-T on any row lists the cloud sessions for that row's project instead.\n")
+    if not terms:
+        print(f"__CLOUD__\t{home}\t\u2601 resume a claude.ai/code session by link")
 
     for mtime, sid, d in rows:
         with open(os.path.join(CACHE, sid + '.txt'), 'w') as fh:
@@ -208,7 +225,7 @@ def main():
         proj = os.path.basename(d['cwd'].rstrip('/')) or d['cwd']
         mark = f'{GREEN}●{RESET}' if sid in live else ' '
         when = time.strftime('%m-%d %H:%M', time.localtime(mtime))
-        print(f"{sid}\t{d['cwd']}\t{mark} {DIM}{when}{RESET}  {proj:<18.18}  {one_line(title(d), 80)}\t{haystack(d)}")
+        print(f"{sid}\t{d['cwd']}\t{mark} {DIM}{when}{RESET}  {proj:<18.18}  {one_line(title(d), 80)}")
 
 
 if __name__ == '__main__':

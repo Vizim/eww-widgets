@@ -171,13 +171,17 @@ Three marks on the profile card, above the uptime line:
 `scripts/ai.sh` drives them. The Claude picker lists every session from every
 project, newest first: when it was last used, the project folder, and the title
 Claude Code gave it (or the name you set with `/rename`). A green dot marks a
-session that is already open in another window. Typing searches the title and
-everything you asked in that session, so a session titled "nas setup" still turns
-up for "icloud" if you asked about it there. The preview pane shows the project,
+session that is already open in another window. Typing searches the title,
+everything you asked in that session and the last reply, so a session titled
+"nas setup" still turns up for "icloud" if you asked about it there. Every word
+must match, matching ignores case, and results stay in time order. The preview pane shows the project,
 branch, active dates, cost, a list of your prompts and the last reply. Enter
 resumes the highlighted session in the directory it was last in, so a `!cd`
 from that session carries over; Ctrl-N starts a new session in that same
-directory; the first row starts one in `~`. The list refreshes itself while
+directory; the first row starts one in `~`. Ctrl-T opens `claude --teleport`
+for that row's project, which lists the claude.ai/code sessions of that repo
+and pulls one down into a local session; the cloud row at the top does the
+same for a pasted claude.ai/code link. The list refreshes itself while
 open, so a `/rename` in another window shows up within a couple of seconds
 (Ctrl-R forces it).
 

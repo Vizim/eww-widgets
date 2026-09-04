@@ -28,13 +28,14 @@ pick_claude() {
   ss -Hltn "src $PICKER_ADDR:$port" 2>/dev/null | grep -q . && port=0
   FZF_API_KEY=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n'); export FZF_API_KEY
   list="CLAUDE_PICKER_CACHE='$cache' python3 '$(dirname "$SELF")/claude-sessions.py'"
-  # Field 3 is shown, field 4 is the hidden search text (title, project, prompts).
-  # The watcher reloads the list through fzf's HTTP port when a transcript changes.
-  out=$(eval "$list" | fzf --delimiter='\t' --with-nth=3 --nth=3,4 --exact --ansi --reverse --height=100% \
-            --prompt='claude > ' --expect=ctrl-n --listen "$PICKER_ADDR:$port" --track \
+  # fzf does no matching itself: every keystroke re-runs the indexer with the
+  # query, which searches titles, prompts and replies and keeps time order.
+  # The watcher reloads the list the same way when a transcript changes.
+  out=$(eval "$list" | fzf --delimiter='\t' --with-nth=3 --ansi --reverse --height=100% --disabled \
+            --prompt='claude > ' --expect=ctrl-n,ctrl-t --listen "$PICKER_ADDR:$port" --track \
             --bind "start:execute-silent(setsid -f bash '$SELF' watch-claude \$FZF_PORT \$PPID)" \
-            --bind "ctrl-r:reload($list)" \
-            --header='Enter resumes  |  Ctrl-N new session in that project  |  Ctrl-R refresh  |  type to search prompts' \
+            --bind "change:reload($list {q})" --bind "ctrl-r:reload($list {q})" \
+            --header='Enter resumes | Ctrl-N new session there | Ctrl-T cloud sessions there | Ctrl-R refresh | type to search' \
             --preview="cat '$cache'/{1}.txt" \
             --preview-window='right,50%,wrap,<110(down,45%,wrap)') || exit 0
   key=$(head -n1 <<<"$out")
@@ -43,8 +44,23 @@ pick_claude() {
   sid=$(cut -f1 <<<"$sel")
   dir=$(cut -f2 <<<"$sel")
   cd "$dir" 2>/dev/null || cd "$HOME" || exit 1
-  if [ "$key" = "ctrl-n" ] || [ "$sid" = "__NEW__" ]; then exec claude; fi
+  case "$key:$sid" in
+    ctrl-n:*)     exec claude ;;
+    ctrl-t:*)     exec claude --teleport ;;
+    *:__NEW__)    exec claude ;;
+    *:__CLOUD__)  teleport_by_link ;;
+  esac
   exec claude --resume "$sid"
+}
+
+# Read a claude.ai/code link (or bare session id) and resume it locally.
+teleport_by_link() {
+  local link id
+  printf 'claude.ai/code link or session id: '
+  IFS= read -r link
+  id=$(grep -oE 'session_[A-Za-z0-9]+' <<<"$link" | head -n1)
+  [ -z "$id" ] && { echo "no session id in that" >&2; sleep 2; exit 1; }
+  exec claude --teleport "$id"
 }
 
 # Poll transcript mtimes and push a reload to the picker on $PICKER_ADDR:$1,
@@ -56,7 +72,7 @@ watch_claude() {
     now=$(ls -l --time-style=+%s ~/.claude/projects/*/*.jsonl 2>/dev/null | md5sum)
     if [ -n "$seen" ] && [ "$now" != "$seen" ]; then
       curl -sf --max-time 2 -H "x-api-key: ${FZF_API_KEY:-}" -XPOST "$PICKER_ADDR:$port" \
-        -d "reload(CLAUDE_PICKER_CACHE='$cache' python3 '$(dirname "$SELF")/claude-sessions.py')" >/dev/null
+        -d "reload(CLAUDE_PICKER_CACHE='$cache' python3 '$(dirname "$SELF")/claude-sessions.py' {q})" >/dev/null
     fi
     seen=$now
     sleep 2
