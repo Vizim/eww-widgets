@@ -75,6 +75,9 @@ WEATHER = [
 # square disappears into the tile. Keep in step with $c-whatsapp in eww.scss.
 WEBSITES = [
     ('whatsapp', 'whatsapp-tray', 'images/icons/websites/whatsapp.png', None, '#ffffff'),
+    # planner.zains.cc: the portfolio's lambda mark, gradient kept as-is.
+    ('planner', os.path.expanduser('~/Desktop/portfolio/public/lambda.svg'),
+     'images/icons/websites/planner.png', None, None),
 ]
 
 APP_DIRS = [

@@ -12,7 +12,7 @@ UNIT=eww-widgets.service
 
 WINDOWS=(
   profile
-  link_github link_youtube link_reddit link_whatsapp
+  link_github link_youtube link_planner link_whatsapp
   media blockclock apps
   power_off power_suspend power_logout power_reboot
   system resources

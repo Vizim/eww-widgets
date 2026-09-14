@@ -224,13 +224,13 @@
 
 (defwindow link_youtube
   :monitor "HDMI-A-1" :stacking "bottom" :focusable false
-  :geometry (geometry :x "869px" :y "574px" :width "120px" :height "120px" :anchor "top left")
+  :geometry (geometry :x "869px" :y "714px" :width "120px" :height "120px" :anchor "top left")
   (w_link :icon "youtube" :name "youtube" :url "https://youtube.com"))
 
-(defwindow link_reddit
+(defwindow link_planner
   :monitor "HDMI-A-1" :stacking "bottom" :focusable false
-  :geometry (geometry :x "869px" :y "714px" :width "120px" :height "120px" :anchor "top left")
-  (w_link :icon "reddit" :name "reddit" :url "https://reddit.com"))
+  :geometry (geometry :x "869px" :y "574px" :width "120px" :height "120px" :anchor "top left")
+  (w_link :icon "planner" :name "planner" :url "https://planner.zains.cc"))
 
 (defwindow link_whatsapp
   :monitor "HDMI-A-1" :stacking "bottom" :focusable false

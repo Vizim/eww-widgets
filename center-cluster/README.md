@@ -143,7 +143,7 @@ Warp is the only app icon without a Colloid version; it uses the app's own.
 | Panel | Contents |
 | --- | --- |
 | profile | artwork tile (launches Warp), user, greeting + quote, AI launchers, uptime |
-| links | GitHub, YouTube, Reddit, WhatsApp - open in Firefox |
+| links | GitHub, YouTube, Planner (planner.zains.cc), WhatsApp - open in Firefox |
 | media | MPRIS art / title / artist / transport, any player |
 | blockclock | BC-Lock bars with the time and date staircases over them |
 | apps | Files, VS Code, Discord, Warp, Firefox, Obsidian |
@@ -252,7 +252,7 @@ What is carried over from upstream:
 * the panel composition, proportions and grid
 * the colour palette, sampled from the project's screenshot
   (panel `#9484ac`, the clock/date accents, the ring and pill treatments)
-* the `github` / `youtube` / `reddit` tile artwork in `images/icons/websites/`
+* the `github` / `youtube` tile artwork in `images/icons/websites/` (`planner` is the portfolio lambda mark)
 
 Upstream's MIT licence text is kept alongside this port in
 [`LICENSE.upstream`](LICENSE.upstream), as the licence requires.
@@ -284,3 +284,30 @@ never Unicode glyph substitutes, so no icon font is required.
 and curly quotes from the quote API to ASCII. It also folds the text to a fixed
 line count, because eww's `:limit-width` truncates with an ellipsis rather than
 setting a wrap width - the line breaks have to come from the text itself.
+
+## Keyboard
+
+The cluster windows are unfocusable by design, so keyboard access goes through
+COSMIC shortcuts that call the same scripts as the tiles. They live in
+`~/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom`.
+
+| Tile            | Keys                | Runs                          |
+|-----------------|---------------------|-------------------------------|
+| Files           | Super+Shift+F       | `scripts/apps.sh --files`     |
+| VS Code         | Super+Shift+V       | `scripts/apps.sh --vscode`    |
+| Discord         | Super+Shift+D       | `scripts/apps.sh --discord`   |
+| Warp            | Super+Shift+W       | `scripts/apps.sh --warp`      |
+| Firefox         | Super+Shift+B       | `scripts/apps.sh --firefox`   |
+| Obsidian        | Super+Shift+O       | `scripts/apps.sh --obsidian`  |
+| Claude picker   | Super+Shift+C       | `scripts/ai.sh claude`        |
+| Hermes picker   | Super+Shift+E       | `scripts/ai.sh hermes`        |
+| ChatGPT         | Super+Shift+G       | `scripts/ai.sh chatgpt`       |
+| GitHub          | Super+Ctrl+G        | `scripts/apps.sh --url ...`   |
+| YouTube         | Super+Ctrl+Y        | `scripts/apps.sh --url ...`   |
+| Planner         | Super+Ctrl+P        | `scripts/apps.sh --url ...`   |
+| WhatsApp        | Super+Ctrl+W        | `scripts/apps.sh --url ...`   |
+
+Media transport and the volume/mic sliders are not bound here: COSMIC already
+maps the keyboard's media, volume, and mic-mute keys to those actions.
+Power tiles are deliberately unbound. Use Super+Escape (lock) and
+Super+Shift+Escape (log out) from COSMIC's defaults.

@@ -67,10 +67,7 @@ $bc-ink:           #f5f3fc;   // time
 $bc-ink-dim:       #cdc4e8;   // date
 
 // -- Site tile colours (brand colours, left alone) -------------------
-$c-github:         #1b1f23;
-$c-youtube:        #cd201e;
-$c-reddit:         #ff4500;
-$c-whatsapp:       #29b6f6;   // blue kept from the old telegram tile, by request
+$c-link:           #0a0a0c;   // all four link tiles, near-black
 
 // -- Interaction -----------------------------------------------------
 $hover-wash:       rgba(255, 255, 255, 0.20);
@@ -203,15 +200,15 @@ window { background-color: transparent; }
   border-radius: $panel-radius;
   transition: background-color $anim;
 }
-.linktile.github   { background-color: $c-github; }
-.linktile.youtube  { background-color: $c-youtube; }
-.linktile.reddit   { background-color: $c-reddit; }
-.linktile.whatsapp { background-color: $c-whatsapp; }
+.linktile.github   { background-color: $c-link; }
+.linktile.youtube  { background-color: $c-link; }
+.linktile.planner  { background-color: $c-link; }
+.linktile.whatsapp { background-color: $c-link; }
 
-.linktile.github:hover   { background-color: lighten($c-github, 12%); }
-.linktile.youtube:hover  { background-color: lighten($c-youtube, 10%); }
-.linktile.reddit:hover   { background-color: lighten($c-reddit, 10%); }
-.linktile.whatsapp:hover { background-color: lighten($c-whatsapp, 10%); }
+.linktile.github:hover { background-color: lighten($c-link, 8%); }
+.linktile.youtube:hover { background-color: lighten($c-link, 8%); }
+.linktile.planner:hover { background-color: lighten($c-link, 8%); }
+.linktile.whatsapp:hover { background-color: lighten($c-link, 8%); }
 
 /** Media pane ******************************************************/
 .mediapane { padding: 0px; }
