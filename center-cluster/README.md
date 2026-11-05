@@ -160,42 +160,22 @@ rows are spread to keep the panel balanced.
 
 ## AI launchers
 
-Three marks on the profile card, above the uptime line:
+Two marks on the profile card, above the uptime line:
 
 | Mark | Action |
 | --- | --- |
-| Claude | pick a recent Claude Code session, or start a new one |
-| Hermes | same, against the Hermes session store |
+| Duck | open the `aisp` session picker (Claude Code, Codex, Hermes) |
 | ChatGPT | open ChatGPT in Firefox |
 
-`scripts/ai.sh` drives them. The Claude picker lists every session from every
-project, newest first: when it was last used, the project folder, and the title
-Claude Code gave it (or the name you set with `/rename`). A green dot marks a
-session that is already open in another window. Typing searches the title,
-everything you asked in that session and the last reply, so a session titled
-"nas setup" still turns up for "icloud" if you asked about it there. Every word
-must match, matching ignores case, and results stay in time order. The preview pane shows the project,
-branch, active dates, cost, a list of your prompts and the last reply. Enter
-resumes the highlighted session in the directory it was last in, so a `!cd`
-from that session carries over; Ctrl-N starts a new session in that same
-directory; the first row starts one in `~`. Ctrl-T opens `claude --teleport`
-for that row's project, which lists the claude.ai/code sessions of that repo
-and pulls one down into a local session; the cloud row at the top does the
-same for a pasted claude.ai/code link. The list refreshes itself while
-open, so a `/rename` in another window shows up within a couple of seconds
-(Ctrl-R forces it).
+`scripts/ai.sh` drives them. The picker is its own project at
+`~/Desktop/ai-session-picker` (GitHub `Vizim/ai-session-picker`), installed with
+`pipx install -e ~/Desktop/ai-session-picker`; the cluster only launches it.
+Its cache lives in `~/.cache/agent-picker/`. See that repo for how it works.
 
-`scripts/claude-sessions.py` builds the list from `~/.claude/projects/*/*.jsonl`
-rather than shelling out to `claude --resume`, because `--resume` only lists the
-current directory's sessions and the folder names under `projects/` are a lossy
-mangling of the real path. Parsed results are cached in
-`~/.cache/claude-picker/`, so only sessions that changed since the last open are
-re-read.
-
-**Terminal.** The pickers need a terminal that can run a command, and Warp cannot:
+**Terminal.** The picker needs a terminal that can run a command, and Warp cannot:
 its CLI exposes only cloud/agent subcommands with no exec flag, and its `warp://`
 scheme has no run-command action - both checked against the installed build. So
-the pickers open in `$AI_TERMINAL` (default `kitty`), while everything that only
+the picker opens in `$AI_TERMINAL` (default `kitty`), while everything that only
 needs "a terminal" (the profile tile) still uses Warp. Point `AI_TERMINAL` at any
 terminal whose `-e` runs a command.
 
@@ -206,7 +186,7 @@ Rebuild them after a clone:
 
 ```sh
 ./scripts/sync-icons.sh       # app, system, media and weather icons, from the icon theme
-./scripts/sync-ai-icons.sh    # Claude / Hermes / ChatGPT marks, tinted purple
+./scripts/sync-ai-icons.sh    # ChatGPT mark, tinted purple (the duck is tracked)
 ```
 
 `sync-ai-icons.sh` reduces each source to its glyph alone, dropping the app-icon
@@ -299,8 +279,7 @@ COSMIC shortcuts that call the same scripts as the tiles. They live in
 | Warp            | Super+Shift+W       | `scripts/apps.sh --warp`      |
 | Firefox         | Super+Shift+B       | `scripts/apps.sh --firefox`   |
 | Obsidian        | Super+Shift+O       | `scripts/apps.sh --obsidian`  |
-| Claude picker   | Super+Shift+C       | `scripts/ai.sh claude`        |
-| Hermes picker   | Super+Shift+E       | `scripts/ai.sh hermes`        |
+| Session picker  | Super+Shift+C / E   | `scripts/ai.sh claude` / `hermes` |
 | ChatGPT         | Super+Shift+G       | `scripts/ai.sh chatgpt`       |
 | GitHub          | Super+Ctrl+G        | `scripts/apps.sh --url ...`   |
 | YouTube         | Super+Ctrl+Y        | `scripts/apps.sh --url ...`   |

@@ -33,8 +33,8 @@ wait_ready() {
 
 open_windows() {
   wait_ready || exit 1
-  # An eww client can wedge holding its pipe open, so cap it and detach the fds.
-  timeout 30 "$EWW" -c "$CFG" open-many "${WINDOWS[@]}" >/dev/null 2>&1 < /dev/null
+  # --no-daemonize: on a slow reply open-many would otherwise fork a second daemon.
+  timeout 30 "$EWW" -c "$CFG" --no-daemonize open-many "${WINDOWS[@]}" >/dev/null 2>&1 < /dev/null
   echo "cluster started"
 }
 

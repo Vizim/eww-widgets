@@ -27,5 +27,6 @@ center-cluster/images/icons/system/
 center-cluster/images/icons/ui/
 center-cluster/images/icons/music/
 center-cluster/images/icons/weather/
-center-cluster/images/icons/ai/
+center-cluster/images/icons/ai/*
+!center-cluster/images/icons/ai/duck.png
 center-cluster/images/icons/websites/whatsapp.png

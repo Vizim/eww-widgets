@@ -71,8 +71,7 @@
     (box :vexpand true)
     (box :class "airow" :orientation "h" :space-evenly false
          :halign "center" :valign "end"
-      (button :class "aiicon ai-claude"  :onclick "scripts/ai.sh claude")
-      (button :class "aiicon ai-hermes"  :onclick "scripts/ai.sh hermes")
+      (button :class "aiicon ai-picker"  :onclick "scripts/ai.sh picker")
       (button :class "aiicon ai-chatgpt" :onclick "scripts/ai.sh chatgpt"))
     (box :class "uptimerow" :orientation "h" :space-evenly false
          :halign "start" :valign "end"
