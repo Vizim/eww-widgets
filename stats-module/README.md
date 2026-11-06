@@ -32,5 +32,5 @@ Ensure the following packages are installed on your system for the polling scrip
    ```
 
 ### Customization
-- **Weather Location**: By default, the weather widget pulls data for Denver, Colorado. To change this, open `eww.yuck` and find the `defpoll weather` command. Replace the `latitude=39.7392&longitude=-104.9903` URL parameters with your own coordinates.
+- **Weather Location**: Set `WEATHER_LAT` and `WEATHER_LON` in `~/.config/eww-widgets/local.env` (see the repo README).
 - **Thresholds**: If you want the red warning colors to kick in at different thresholds, simply adjust the ternary operators in the `color` and `icon_path` properties inside the `stats` widget block.

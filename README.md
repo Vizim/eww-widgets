@@ -32,6 +32,18 @@ A centered greeting widget with time-aware phrases (80+ across 5 time buckets) a
 
 ---
 
+## Personal settings
+
+Your name and location stay out of the repo, in `~/.config/eww-widgets/local.env`:
+
+```sh
+EWW_NAME="Alex"          # greeting name, default "friend"
+WEATHER_LAT="39.7392"    # weather location, default Denver
+WEATHER_LON="-104.9903"
+```
+
+---
+
 ## Requirements
 - [Eww](https://github.com/elkowar/eww) (ElKowar's Wacky Widgets)
 - `bash`, `date` (standard on all Linux systems)

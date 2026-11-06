@@ -4,10 +4,10 @@
 #
 #   weather.sh temp | cond | icon
 #
-# Location and units come from the environment, so set them once in your
-# session (or edit the defaults here):
+# Location and units come from ~/.config/eww-widgets/local.env or the environment:
 #   WEATHER_LAT, WEATHER_LON, WEATHER_UNIT (fahrenheit|celsius), WEATHER_TTL
 set -u
+[ -f "$HOME/.config/eww-widgets/local.env" ] && . "$HOME/.config/eww-widgets/local.env"
 
 LAT="${WEATHER_LAT:-39.7392}"
 LON="${WEATHER_LON:--104.9903}"

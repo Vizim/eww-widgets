@@ -247,13 +247,14 @@ The BC-Lock block clock is ported from `../clock-module` in this repo.
 ## Weather
 
 `scripts/weather.sh` uses open-meteo, no API key, one cached request shared by
-all three polls. Location and units come from the environment:
+all three polls. Location and units come from `~/.config/eww-widgets/local.env`
+(see the repo README) or the environment:
 
 ```sh
 WEATHER_LAT, WEATHER_LON, WEATHER_UNIT (fahrenheit|celsius), WEATHER_TTL
 ```
 
-Defaults are near Denver; edit the top of the script to change them permanently.
+Without them it falls back to Denver.
 
 ## Text and ASCII
 

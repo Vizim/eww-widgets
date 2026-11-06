@@ -20,9 +20,9 @@ A centered Eww widget that displays a time-aware personal greeting and a cached 
 ## Configuration
 
 ### Changing the name
-Open `greeting.sh` and change the single variable at the top:
+Set it in `~/.config/eww-widgets/local.env` (see the repo README):
 ```bash
-NAME="friend"
+EWW_NAME="Alex"
 ```
 
 ### Colour / font tweaks

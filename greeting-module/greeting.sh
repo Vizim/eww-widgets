@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
-# CONFIG — change this to update the name across all greetings
+# CONFIG: set EWW_NAME in ~/.config/eww-widgets/local.env
 # =============================================================================
-NAME="friend"
+[ -f "$HOME/.config/eww-widgets/local.env" ] && . "$HOME/.config/eww-widgets/local.env"
+NAME="${EWW_NAME:-friend}"
 # =============================================================================
 
 CACHE_FILE="$HOME/.cache/eww-last-greeting.txt"
