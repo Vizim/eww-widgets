@@ -4,11 +4,11 @@ A COSMIC/Wayland port of the middle dashboard from
 [husseinhareb/hyprland-eww](https://github.com/husseinhareb/hyprland-eww).
 Only the central cluster is reproduced. There is no top bar and no side panels.
 
-![The center cluster on a COSMIC desktop](../assets/center-cluster.png)
+![The center cluster on a COSMIC desktop](../assets/center-cluster-v2.png)
 
-![Detail](../assets/center-cluster-detail.png)
+![Detail](../assets/center-cluster-detail-v2.png)
 
-![Running alongside a terminal](../assets/center-cluster-neofetch.png)
+![Running alongside a terminal](../assets/center-cluster-neofetch-v2.png)
 
 ```
              /////////////

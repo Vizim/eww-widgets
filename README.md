@@ -4,8 +4,8 @@ A collection of modular [Eww](https://github.com/elkowar/eww) widgets for Linux 
 
 Each module is self-contained - run it independently with its own `eww -c` config.
 
-![Center cluster](./assets/center-cluster.png)
-![Greeting Module](./assets/greeting.png)
+![Center cluster](./assets/center-cluster-v2.png)
+![Greeting Module](./assets/greeting-v2.png)
 ![Clock and Stats Modules](./assets/clock_stats.png)
 
 ---
